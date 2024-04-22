@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>gofit</title>
+	<style type="text/css">
+		.hidden {
+			display: none;
+		}
+
+	</style>
+	<div id="currentExercise" class="hidden"> </div>
+	<div id="exercise" class="hidden"> </div>
+	<div id="reps" class="hidden"> </div>
+	<div id="time" class="hidden"> </div>
+	<div>
+		<button id="startButton" onClick="start()">Start</button>
+		<button id="pauseButton" class="hidden" onClick="pause()">Pause</button>
+		<button id="resumeButton" class="hidden" onClick="resume()">Resume</button>
+	</div>
+	<audio id="timeTickSound" src="beep.mp3"></audio>
+	<audio id="startSound" src="start.mp3"></audio>
+	<audio id="stopSound" src="stop.mp3"></audio>
+	<audio id="successSound" src="success.mp3"></audio>
+	<input type="file" id="fileInput" />
+</head>
+
+<body>
+
+	<script>
+		fileInput.addEventListener('change', handleFileInputChange);
+		let workout = [{name: "squat", reps: 2, duration: 4}, {name: "lying hamstring stretch", reps: 2, duration: 10}];
+		let timer, timerId, currentExercise, currentReps, exerciseSecondsRemaining;
+		let msBetweenReps = 2000;
+		let msBeforeReps = 2000;
+		init();
+
+		function init() {
+			currentExercise = 0;
+			currentReps = 0;
+			setCurrentExerciseText();
+		}
+
+		function setCurrentExerciseText() {
+			document.getElementById("currentExercise").classList.remove("hidden");
+			document.getElementById("currentExercise").innerText =
+				"Exercise: " + workout[currentExercise].name + " (" + (currentExercise + 1) + " / " + workout.length + ")";
+		}
+
+		function setRepsText() {
+			document.getElementById("reps").classList.remove("hidden");
+			document.getElementById("reps").innerText = "Reps: " + (currentReps + 1) + " / " + workout[currentExercise].reps;
+		}
+
+		function setTimeText(time) {
+			document.getElementById("time").classList.remove("hidden");
+			document.getElementById('time').innerText = "Time: " + time;
+		}
+
+		function start() {
+			timer = new Timer();
+			document.getElementById("startButton").classList.add("hidden");
+			document.getElementById("pauseButton").classList.remove("hidden");
+			startRep(workout[currentExercise]);
+		}
+
+		function pause() {
+			timer.stop()
+			document.getElementById("pauseButton").classList.add("hidden");
+			document.getElementById("resumeButton").classList.remove("hidden");
+		}
+		function resume() {
+			timer.start()
+			document.getElementById("resumeButton").classList.add("hidden");
+			document.getElementById("pauseButton").classList.remove("hidden");
+		}
+
+		function startRep(exercise) {
+			timer.start();
+			setRepsText();
+			document.getElementById('startSound').play();
+			timerId = setInterval(() => {
+				const timerTime = timer.getTime();
+				if (timerTime < msBeforeReps) {
+					return;
+				}
+				const exerciseMs = exercise.duration * 1000;
+				const totalRepMs = exerciseMs + msBeforeReps + msBetweenReps;
+				const newTimeRemaining = Math.ceil((exerciseMs - (timerTime - msBeforeReps)) / 1000);
+				if (newTimeRemaining != exerciseSecondsRemaining && newTimeRemaining >= 0) {
+					exerciseSecondsRemaining = newTimeRemaining;
+					setTimeText(Math.min(exercise.duration, exerciseSecondsRemaining));
+					if (exerciseSecondsRemaining > 0) {
+						document.getElementById('timeTickSound').play();
+					} else if (exerciseSecondsRemaining == 0) {
+						document.getElementById('stopSound').play();
+					}
+				}
+				if (timer.getTime() >= totalRepMs) {
+					currentReps++;
+					clearInterval(timerId);
+					if (currentReps < workout[currentExercise].reps) {
+						timer.stop();
+						timer.reset();
+						startRep(exercise);
+					} else {
+						nextExercise();
+					}
+				}
+			}, 10)
+		}
+
+		function nextExercise() {
+			currentReps = 0;
+			currentExercise++;
+			document.getElementById("pauseButton").classList.add("hidden");
+			document.getElementById("time").classList.add("hidden");
+			if (currentExercise < workout.length) {
+				document.getElementById("startButton").classList.remove("hidden");
+				setCurrentExerciseText();
+			} else {
+				document.getElementById("currentExercise").innerText = "Done for the day!";
+				document.getElementById('successSound').play();
+			}
+		}
+
+
+		class Timer {
+			constructor() {
+				this.isRunning = false;
+				this.startTime = 0;
+				this.overallTime = 0;
+			}
+
+			_getTimeElapsedSinceLastStart() {
+				if (!this.startTime) {
+					return 0;
+				}
+				return Date.now() - this.startTime;
+			}
+
+			start() {
+				if (this.isRunning) {
+					return console.error('Timer is already running');
+				}
+				this.isRunning = true;
+				this.startTime = Date.now();
+			}
+
+			stop() {
+				if (!this.isRunning) {
+					return console.error('Timer is already stopped');
+				}
+				this.isRunning = false;
+				this.overallTime = this.overallTime + this._getTimeElapsedSinceLastStart();
+			}
+
+			reset() {
+				this.overallTime = 0;
+				if (this.isRunning) {
+					this.startTime = Date.now();
+					return;
+				}
+				this.startTime = 0;
+			}
+
+			getTime() {
+				if (!this.startTime) {
+					return 0;
+				}
+				if (this.isRunning) {
+					return this.overallTime + this._getTimeElapsedSinceLastStart();
+				}
+				return this.overallTime;
+			}
+		}
+
+		// Function to handle file input change
+		function handleFileInputChange(event) {
+			var file = event.target.files[0];
+			if (file) {
+				readCSVFile(file, function (data) {
+					console.log(data); // Do something with the parsed data
+					workout = data;
+				});
+			} else {
+				console.error("Failed to load file");
+			}
+		}
+
+		function readCSVFile(file, callback) {
+			var reader = new FileReader();
+			let delimeter = '\t';
+			reader.onload = function (event) {
+				var csvData = event.target.result;
+				var csvRows = csvData.split('\n');
+				var headers = csvRows[0].split(delimeter).map(e => e.trim());
+
+				var jsonData = [];
+				for (var i = 1; i < csvRows.length; i++) {
+					var row = csvRows[i].split(delimeter);
+					var obj = {};
+					for (var j = 0; j < headers.length; j++) {
+						obj[headers[j]] = row[j].trim();
+						if (obj[headers[j]] && !isNaN(obj[headers[j]])) {
+							obj[headers[j]] = parseFloat(obj[headers[j]]);
+						}
+					}
+					jsonData.push(obj);
+				}
+
+				callback(jsonData);
+			};
+			reader.readAsText(file);
+		}
+
+	</script>
+
+</body>
+
+</html>
