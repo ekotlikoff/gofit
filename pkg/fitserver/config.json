@@ -1,0 +1,8 @@
+{
+    "ServiceName": "gofit",
+    "Environment": "local",
+    "BasePath": "/fit",
+    "GatewayPort": 8003,
+    "logFile": "",
+    "quiet": false
+}
