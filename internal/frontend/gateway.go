@@ -98,7 +98,7 @@ func (gw *Gateway) Serve() {
 		return prometheusMiddleware(rateLimiterMiddleware(handler))
 	}
 	mux.Handle(bp+"/", middleware(http.HandlerFunc(gw.handleWebRoot)))
-	mux.Handle(bp+"/api/", backendProxy)
+	mux.Handle(bp+"/api/", middleware(backendProxy))
 	// Prometheus metrics endpoint
 	mux.Handle(bp+"/metrics", middleware(
 		promhttp.Handler()))

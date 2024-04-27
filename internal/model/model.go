@@ -49,24 +49,24 @@ type (
 	Effort string
 	// Movement is a specific movement.
 	Movement struct {
-		Name             string
-		Reps             int
-		Duration         time.Duration
-		IterationsPerRep int
-		IterationNames   []string
-		Position         Position
-		Modality         Modality
-		Focus            []Focus
-		SwitchSides      bool
-		Requirement      []Requirement
-		Effort           Effort
+		Name             string        `json:"name"`
+		Reps             int           `json:"reps"`
+		Duration         time.Duration `json:"duration"`
+		IterationsPerRep int           `json:"iterationsPerRep"`
+		IterationNames   []string      `json:"iterationNames"`
+		Position         Position      `json:"position"`
+		Modality         Modality      `json:"modality"`
+		Focus            []Focus       `json:"focus"`
+		SwitchSides      bool          `json:"switchSides"`
+		Requirement      []Requirement `json:"requirement"`
+		Effort           Effort        `json:"effort"`
 	}
 	// Workout structure generally follows these patterns
 	// First standing, then ground
 	// First low/medium warmup, then high effort movements if applicable, then low/medium cooldown
 	Workout struct {
-		Movements []Movement
-		Done      int
+		Movements []Movement `json:"movements"`
+		Done      int        `json:"done"`
 	}
 	WorkoutPreferences struct {
 		Focus     []Focus

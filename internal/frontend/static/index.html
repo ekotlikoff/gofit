@@ -16,7 +16,7 @@
 	<div id="reps" class="hidden"> </div>
 	<div id="time" class="hidden"> </div>
 	<div>
-		<button id="startButton" onClick="start()">Start</button>
+		<button id="startButton" class="hidden" onClick="start()">Start</button>
 		<button id="pauseButton" class="hidden" onClick="pause()">Pause</button>
 		<button id="resumeButton" class="hidden" onClick="resume()">Resume</button>
 	</div>
@@ -24,24 +24,20 @@
 	<audio id="startSound" src="start.mp3"></audio>
 	<audio id="stopSound" src="stop.mp3"></audio>
 	<audio id="successSound" src="success.mp3"></audio>
-	<input type="file" id="fileInput" />
 </head>
 
 <body>
 
 	<script>
-		fileInput.addEventListener('change', handleFileInputChange);
 		let workout = [{name: "squat", reps: 2, duration: 4}, {name: "lying hamstring stretch", reps: 2, duration: 10}];
-		let timer, timerId, currentMovement, currentReps, movementSecondsRemaining;
+		let timer, timerId, currentReps, movementSecondsRemaining;
 		let msBetweenReps = 2000;
 		let msBeforeReps = 2000;
+		let currentMovement = 0;
 		init();
 
 		function init() {
 			fetchWorkout();
-			currentMovement = 0;
-			currentReps = 0;
-			setCurrentMovementText();
 		}
 
 		function fetchWorkout() {
@@ -53,10 +49,13 @@
 					return response.text(); // Or `.json()` or one of the others
 				})
 				.then((data) => {
-					console.log(data);
-				})
-				.catch((error) => {
-					// ...handle/report error...
+					res = JSON.parse(data);
+					workout = res.movements;
+					currentMovement = res.done;
+				}).catch(() => { }).finally(() => {
+					currentReps = 0;
+					setCurrentMovementText();
+					document.getElementById("startButton").classList.remove("hidden");
 				});
 		}
 
@@ -134,6 +133,7 @@
 			currentMovement++;
 			document.getElementById("pauseButton").classList.add("hidden");
 			document.getElementById("time").classList.add("hidden");
+			document.getElementById("reps").classList.add("hidden");
 			if (currentMovement < workout.length) {
 				document.getElementById("startButton").classList.remove("hidden");
 				setCurrentMovementText();
@@ -193,46 +193,6 @@
 				return this.overallTime;
 			}
 		}
-
-		// Function to handle file input change
-		function handleFileInputChange(event) {
-			var file = event.target.files[0];
-			if (file) {
-				readCSVFile(file, function (data) {
-					console.log(data); // Do something with the parsed data
-					workout = data;
-				});
-			} else {
-				console.error("Failed to load file");
-			}
-		}
-
-		function readCSVFile(file, callback) {
-			var reader = new FileReader();
-			let delimeter = '\t';
-			reader.onload = function (event) {
-				var csvData = event.target.result;
-				var csvRows = csvData.split('\n');
-				var headers = csvRows[0].split(delimeter).map(e => e.trim());
-
-				var jsonData = [];
-				for (var i = 1; i < csvRows.length; i++) {
-					var row = csvRows[i].split(delimeter);
-					var obj = {};
-					for (var j = 0; j < headers.length; j++) {
-						obj[headers[j]] = row[j].trim();
-						if (obj[headers[j]] && !isNaN(obj[headers[j]])) {
-							obj[headers[j]] = parseFloat(obj[headers[j]]);
-						}
-					}
-					jsonData.push(obj);
-				}
-
-				callback(jsonData);
-			};
-			reader.readAsText(file);
-		}
-
 	</script>
 
 </body>
