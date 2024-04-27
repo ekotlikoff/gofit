@@ -11,8 +11,8 @@
 		}
 
 	</style>
-	<div id="currentExercise" class="hidden"> </div>
-	<div id="exercise" class="hidden"> </div>
+	<div id="currentMovement" class="hidden"> </div>
+	<div id="movement" class="hidden"> </div>
 	<div id="reps" class="hidden"> </div>
 	<div id="time" class="hidden"> </div>
 	<div>
@@ -32,16 +32,16 @@
 	<script>
 		fileInput.addEventListener('change', handleFileInputChange);
 		let workout = [{name: "squat", reps: 2, duration: 4}, {name: "lying hamstring stretch", reps: 2, duration: 10}];
-		let timer, timerId, currentExercise, currentReps, exerciseSecondsRemaining;
+		let timer, timerId, currentMovement, currentReps, movementSecondsRemaining;
 		let msBetweenReps = 2000;
 		let msBeforeReps = 2000;
 		init();
 
 		function init() {
 			fetchWorkout();
-			currentExercise = 0;
+			currentMovement = 0;
 			currentReps = 0;
-			setCurrentExerciseText();
+			setCurrentMovementText();
 		}
 
 		function fetchWorkout() {
@@ -60,15 +60,15 @@
 				});
 		}
 
-		function setCurrentExerciseText() {
-			document.getElementById("currentExercise").classList.remove("hidden");
-			document.getElementById("currentExercise").innerText =
-				"Exercise: " + workout[currentExercise].name + " (" + (currentExercise + 1) + " / " + workout.length + ")";
+		function setCurrentMovementText() {
+			document.getElementById("currentMovement").classList.remove("hidden");
+			document.getElementById("currentMovement").innerText =
+				"Movement: " + workout[currentMovement].name + " (" + (currentMovement + 1) + " / " + workout.length + ")";
 		}
 
 		function setRepsText() {
 			document.getElementById("reps").classList.remove("hidden");
-			document.getElementById("reps").innerText = "Reps: " + (currentReps + 1) + " / " + workout[currentExercise].reps;
+			document.getElementById("reps").innerText = "Reps: " + (currentReps + 1) + " / " + workout[currentMovement].reps;
 		}
 
 		function setTimeText(time) {
@@ -80,7 +80,7 @@
 			timer = new Timer();
 			document.getElementById("startButton").classList.add("hidden");
 			document.getElementById("pauseButton").classList.remove("hidden");
-			startRep(workout[currentExercise]);
+			startRep(workout[currentMovement]);
 		}
 
 		function pause() {
@@ -94,7 +94,7 @@
 			document.getElementById("pauseButton").classList.remove("hidden");
 		}
 
-		function startRep(exercise) {
+		function startRep(movement) {
 			timer.start();
 			setRepsText();
 			document.getElementById('startSound').play();
@@ -103,42 +103,42 @@
 				if (timerTime < msBeforeReps) {
 					return;
 				}
-				const exerciseMs = exercise.duration * 1000;
-				const totalRepMs = exerciseMs + msBeforeReps + msBetweenReps;
-				const newTimeRemaining = Math.ceil((exerciseMs - (timerTime - msBeforeReps)) / 1000);
-				if (newTimeRemaining != exerciseSecondsRemaining && newTimeRemaining >= 0) {
-					exerciseSecondsRemaining = newTimeRemaining;
-					setTimeText(Math.min(exercise.duration, exerciseSecondsRemaining));
-					if (exerciseSecondsRemaining > 0) {
+				const movementMs = movement.duration * 1000;
+				const totalRepMs = movementMs + msBeforeReps + msBetweenReps;
+				const newTimeRemaining = Math.ceil((movementMs - (timerTime - msBeforeReps)) / 1000);
+				if (newTimeRemaining != movementSecondsRemaining && newTimeRemaining >= 0) {
+					movementSecondsRemaining = newTimeRemaining;
+					setTimeText(Math.min(movement.duration, movementSecondsRemaining));
+					if (movementSecondsRemaining > 0) {
 						document.getElementById('timeTickSound').play();
-					} else if (exerciseSecondsRemaining == 0) {
+					} else if (movementSecondsRemaining == 0) {
 						document.getElementById('stopSound').play();
 					}
 				}
 				if (timer.getTime() >= totalRepMs) {
 					currentReps++;
 					clearInterval(timerId);
-					if (currentReps < workout[currentExercise].reps) {
+					if (currentReps < workout[currentMovement].reps) {
 						timer.stop();
 						timer.reset();
-						startRep(exercise);
+						startRep(movement);
 					} else {
-						nextExercise();
+						nextMovement();
 					}
 				}
 			}, 10)
 		}
 
-		function nextExercise() {
+		function nextMovement() {
 			currentReps = 0;
-			currentExercise++;
+			currentMovement++;
 			document.getElementById("pauseButton").classList.add("hidden");
 			document.getElementById("time").classList.add("hidden");
-			if (currentExercise < workout.length) {
+			if (currentMovement < workout.length) {
 				document.getElementById("startButton").classList.remove("hidden");
-				setCurrentExerciseText();
+				setCurrentMovementText();
 			} else {
-				document.getElementById("currentExercise").innerText = "Done for the day!";
+				document.getElementById("currentMovement").innerText = "Done for the day!";
 				document.getElementById('successSound').play();
 			}
 		}

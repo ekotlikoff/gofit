@@ -1,10 +1,13 @@
 package server
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/ekotlikoff/gofit/internal/model"
 )
 
 // FitServer handles http requests from clients
@@ -34,8 +37,11 @@ func makeWorkoutHandler() http.Handler {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case "GET":
-			// TODO add exercise list as static file and model code to choose a subset for the workout
-			w.WriteHeader(http.StatusOK)
+			workout := model.MakeWorkout()
+			if err := json.NewEncoder(w).Encode(workout); err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
 		}
 	}
 	return http.HandlerFunc(handler)

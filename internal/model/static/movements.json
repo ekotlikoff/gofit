@@ -1,0 +1,534 @@
+[
+    {
+        "Name": "squat",
+        "reps": 2,
+        "Duration": 5,
+        "IterationsPerRep": null,
+        "IterationNames": null,
+        "Position": "standing",
+        "Modality": "strength",
+        "Focus": [
+            "hip",
+            "back",
+            "knee"
+        ],
+        "SwitchSides": null,
+        "Requirements": null,
+        "Effort": "high"
+    },
+    {
+        "Name": "floor hamstring stretch",
+        "reps": 4,
+        "Duration": 15,
+        "IterationsPerRep": null,
+        "IterationNames": null,
+        "Position": "ground",
+        "Modality": "flexibility",
+        "Focus": [
+            "hip",
+            "back",
+            "knee"
+        ],
+        "SwitchSides": true,
+        "Requirements": "mat",
+        "Effort": "low"
+    },
+    {
+        "Name": "standing hamstring stretch",
+        "reps": 4,
+        "Duration": 15,
+        "IterationsPerRep": null,
+        "IterationNames": null,
+        "Position": "standing",
+        "Modality": "flexiblity",
+        "Focus": [
+            "hip",
+            "back",
+            "knee"
+        ],
+        "SwitchSides": true,
+        "Requirements": null,
+        "Effort": "low"
+    },
+    {
+        "Name": "hip flexor stretch",
+        "reps": 4,
+        "Duration": 10,
+        "IterationsPerRep": null,
+        "IterationNames": null,
+        "Position": "standing",
+        "Modality": "flexiblity",
+        "Focus": [
+            "hip",
+            "back",
+            "knee"
+        ],
+        "SwitchSides": true,
+        "Requirements": null,
+        "Effort": "low"
+    },
+    {
+        "Name": "standing forward kicks",
+        "reps": 12,
+        "Duration": 5,
+        "IterationsPerRep": null,
+        "IterationNames": null,
+        "Position": "standing",
+        "Modality": "strength",
+        "Focus": [
+            "hip",
+            "back",
+            "knee"
+        ],
+        "SwitchSides": true,
+        "Requirements": null,
+        "Effort": "low"
+    },
+    {
+        "Name": "standing hip extension",
+        "reps": 10,
+        "Duration": 5,
+        "IterationsPerRep": null,
+        "IterationNames": null,
+        "Position": "standing",
+        "Modality": "strength",
+        "Focus": [
+            "hip",
+            "back",
+            "knee"
+        ],
+        "SwitchSides": true,
+        "Requirements": null,
+        "Effort": "low"
+    },
+    {
+        "Name": "childs pose",
+        "reps": 3,
+        "Duration": 10,
+        "IterationsPerRep": null,
+        "IterationNames": null,
+        "Position": "ground",
+        "Modality": "flexiblity",
+        "Focus": [
+            "hip",
+            "back",
+            "knee"
+        ],
+        "SwitchSides": null,
+        "Requirements": "mat",
+        "Effort": "low"
+    },
+    {
+        "Name": "donkey kicks",
+        "reps": 14,
+        "Duration": 5,
+        "IterationsPerRep": null,
+        "IterationNames": null,
+        "Position": "ground",
+        "Modality": "strength",
+        "Focus": [
+            "hip",
+            "back",
+            "knee"
+        ],
+        "SwitchSides": true,
+        "Requirements": "mat",
+        "Effort": "medium"
+    },
+    {
+        "Name": "fire hydrant",
+        "reps": 14,
+        "Duration": 5,
+        "IterationsPerRep": null,
+        "IterationNames": null,
+        "Position": "ground",
+        "Modality": "strength",
+        "Focus": [
+            "hip",
+            "back",
+            "knee"
+        ],
+        "SwitchSides": true,
+        "Requirements": "mat",
+        "Effort": "medium"
+    },
+    {
+        "Name": "knee rocking",
+        "reps": 8,
+        "Duration": 2,
+        "IterationsPerRep": 2,
+        "IterationNames": [
+            "left",
+            "right"
+        ],
+        "Position": "ground",
+        "Modality": "mobility",
+        "Focus": [
+            "hip",
+            "back",
+            "knee"
+        ],
+        "SwitchSides": null,
+        "Requirements": "mat",
+        "Effort": "medium"
+    },
+    {
+        "Name": "bridge",
+        "reps": 15,
+        "Duration": 5,
+        "IterationsPerRep": null,
+        "IterationNames": null,
+        "Position": "ground",
+        "Modality": "strength",
+        "Focus": [
+            "hip",
+            "back",
+            "knee"
+        ],
+        "SwitchSides": null,
+        "Requirements": "mat",
+        "Effort": "medium"
+    },
+    {
+        "Name": "quad stretch",
+        "reps": 4,
+        "Duration": 15,
+        "IterationsPerRep": null,
+        "IterationNames": null,
+        "Position": "standing",
+        "Modality": "flexibliity",
+        "Focus": [
+            "hip",
+            "back",
+            "knee"
+        ],
+        "SwitchSides": true,
+        "Requirements": null,
+        "Effort": "low"
+    },
+    {
+        "Name": "standing side leg raise",
+        "reps": 8,
+        "Duration": 5,
+        "IterationsPerRep": null,
+        "IterationNames": null,
+        "Position": "standing",
+        "Modality": "strength",
+        "Focus": [
+            "hip",
+            "back",
+            "knee"
+        ],
+        "SwitchSides": true,
+        "Requirements": null,
+        "Effort": "medium"
+    },
+    {
+        "Name": "lying side leg raise",
+        "reps": 8,
+        "Duration": 5,
+        "IterationsPerRep": null,
+        "IterationNames": null,
+        "Position": "ground",
+        "Modality": "strength",
+        "Focus": [
+            "hip",
+            "back",
+            "knee"
+        ],
+        "SwitchSides": true,
+        "Requirements": "mat",
+        "Effort": "medium"
+    },
+    {
+        "Name": "hip hinge",
+        "reps": 12,
+        "Duration": 3,
+        "IterationsPerRep": null,
+        "IterationNames": null,
+        "Position": "standing",
+        "Modality": "strength",
+        "Focus": [
+            "hip",
+            "back",
+            "knee"
+        ],
+        "SwitchSides": null,
+        "Requirements": null,
+        "Effort": "medium"
+    },
+    {
+        "Name": "clam shell",
+        "reps": 8,
+        "Duration": 4,
+        "IterationsPerRep": null,
+        "IterationNames": null,
+        "Position": "ground",
+        "Modality": "strength",
+        "Focus": [
+            "hip",
+            "back",
+            "knee"
+        ],
+        "SwitchSides": null,
+        "Requirements": "mat",
+        "Effort": "medium"
+    },
+    {
+        "Name": "founder",
+        "reps": 8,
+        "Duration": 4,
+        "IterationsPerRep": null,
+        "IterationNames": null,
+        "Position": "standing",
+        "Modality": "strength",
+        "Focus": [
+            "hip",
+            "back",
+            "knee",
+            "shoulder"
+        ],
+        "SwitchSides": null,
+        "Requirements": null,
+        "Effort": "medium"
+    },
+    {
+        "Name": "seated hamstring stretch",
+        "reps": 4,
+        "Duration": 12,
+        "IterationsPerRep": null,
+        "IterationNames": null,
+        "Position": "standing",
+        "Modality": "strength",
+        "Focus": [
+            "hip",
+            "back",
+            "knee"
+        ],
+        "SwitchSides": true,
+        "Requirements": "chair",
+        "Effort": "low"
+    },
+    {
+        "Name": "seated cat cow",
+        "reps": 3,
+        "Duration": 8,
+        "IterationsPerRep": 2,
+        "IterationNames": [
+            "forward",
+            "back"
+        ],
+        "Position": "standing",
+        "Modality": "mobility",
+        "Focus": [
+            "hip",
+            "back"
+        ],
+        "SwitchSides": null,
+        "Requirements": "chair",
+        "Effort": "low"
+    },
+    {
+        "Name": "single leg rdl",
+        "reps": 8,
+        "Duration": 5,
+        "IterationsPerRep": null,
+        "IterationNames": null,
+        "Position": "standing",
+        "Modality": "strength",
+        "Focus": [
+            "hip",
+            "back",
+            "knee"
+        ],
+        "SwitchSides": true,
+        "Requirements": null,
+        "Effort": "high"
+    },
+    {
+        "Name": "sit to stand",
+        "reps": 8,
+        "Duration": 3,
+        "IterationsPerRep": null,
+        "IterationNames": null,
+        "Position": "standing",
+        "Modality": "strength",
+        "Focus": [
+            "hip",
+            "back",
+            "knee"
+        ],
+        "SwitchSides": null,
+        "Requirements": "chair",
+        "Effort": "medium"
+    },
+    {
+        "Name": "staggered sit to stand",
+        "reps": 8,
+        "Duration": 3,
+        "IterationsPerRep": null,
+        "IterationNames": null,
+        "Position": "standing",
+        "Modality": "strength",
+        "Focus": [
+            "hip",
+            "back",
+            "knee"
+        ],
+        "SwitchSides": true,
+        "Requirements": "chair",
+        "Effort": "high"
+    },
+    {
+        "Name": "core balance squat",
+        "reps": 4,
+        "Duration": 10,
+        "IterationsPerRep": null,
+        "IterationNames": null,
+        "Position": "standing",
+        "Modality": "strength",
+        "Focus": [
+            "hip",
+            "back",
+            "knee"
+        ],
+        "SwitchSides": true,
+        "Requirements": null,
+        "Effort": "high"
+    },
+    {
+        "Name": "external hip rotation",
+        "reps": 10,
+        "Duration": 4,
+        "IterationsPerRep": null,
+        "IterationNames": null,
+        "Position": "standing",
+        "Modality": "strength",
+        "Focus": [
+            "hip",
+            "back",
+            "knee"
+        ],
+        "SwitchSides": true,
+        "Requirements": "chair",
+        "Effort": "low"
+    },
+    {
+        "Name": "internal hip rotation",
+        "reps": 10,
+        "Duration": 4,
+        "IterationsPerRep": null,
+        "IterationNames": null,
+        "Position": "standing",
+        "Modality": "strength",
+        "Focus": [
+            "hip",
+            "back",
+            "knee"
+        ],
+        "SwitchSides": true,
+        "Requirements": "chair",
+        "Effort": "low"
+    },
+    {
+        "Name": "straight leg raise",
+        "reps": 12,
+        "Duration": 4,
+        "IterationsPerRep": null,
+        "IterationNames": null,
+        "Position": "ground",
+        "Modality": "strength",
+        "Focus": [
+            "hip",
+            "back",
+            "knee"
+        ],
+        "SwitchSides": true,
+        "Requirements": "mat",
+        "Effort": "low"
+    },
+    {
+        "Name": "lunge",
+        "reps": 10,
+        "Duration": 5,
+        "IterationsPerRep": null,
+        "IterationNames": null,
+        "Position": "standing",
+        "Modality": "strength",
+        "Focus": [
+            "hip",
+            "back",
+            "knee"
+        ],
+        "SwitchSides": true,
+        "Requirements": null,
+        "Effort": "high"
+    },
+    {
+        "Name": "side lunge",
+        "reps": 12,
+        "Duration": 5,
+        "IterationsPerRep": null,
+        "IterationNames": null,
+        "Position": "standing",
+        "Modality": "strength",
+        "Focus": [
+            "hip",
+            "back",
+            "knee"
+        ],
+        "SwitchSides": true,
+        "Requirements": null,
+        "Effort": "high"
+    },
+    {
+        "Name": "scapular clocks",
+        "reps": 3,
+        "Duration": 5,
+        "IterationsPerRep": 4,
+        "IterationNames": [
+            "up",
+            "back",
+            "down",
+            "forward"
+        ],
+        "Position": "standing",
+        "Modality": "strength",
+        "Focus": [
+            "shoulder"
+        ],
+        "SwitchSides": null,
+        "Requirements": null,
+        "Effort": "low"
+    },
+    {
+        "Name": "wall slides",
+        "reps": 8,
+        "Duration": 2,
+        "IterationsPerRep": null,
+        "IterationNames": null,
+        "Position": "standing",
+        "Modality": "strength",
+        "Focus": [
+            "shoulder"
+        ],
+        "SwitchSides": null,
+        "Requirements": null,
+        "Effort": "low"
+    },
+    {
+        "Name": "banded rotation pull aparts",
+        "reps": 8,
+        "Duration": 5,
+        "IterationsPerRep": null,
+        "IterationNames": null,
+        "Position": "standing",
+        "Modality": "strength",
+        "Focus": [
+            "shoulder"
+        ],
+        "SwitchSides": null,
+        "Requirements": "band",
+        "Effort": "medium"
+    }
+]
