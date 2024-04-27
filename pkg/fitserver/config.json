@@ -3,6 +3,7 @@
     "Environment": "local",
     "BasePath": "/fit",
     "GatewayPort": 8003,
+    "ServerPort": 8004,
     "logFile": "",
     "quiet": false
 }

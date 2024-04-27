@@ -72,10 +72,9 @@ type (
 	// Gateway is the server that serves static files and proxies to the different
 	// backends
 	Gateway struct {
-		HTTPBackend *url.URL
-		WSBackend   *url.URL
-		BasePath    string
-		Port        int
+		Backend  *url.URL
+		BasePath string
+		Port     int
 	}
 
 	// Credentials for authentication
@@ -88,21 +87,18 @@ type (
 func (gw *Gateway) Serve() {
 	cleanupChan := make(chan struct{})
 	setupRateLimiter(cleanupChan)
-	wsBackendProxy := httputil.NewSingleHostReverseProxy(gw.WSBackend)
-	wsBackendProxy.ModifyResponse = func(res *http.Response) error {
-		gatewayResponseMetric.WithLabelValues(
-			res.Request.URL.Path, res.Request.Method, res.Status).Inc()
-		return nil
-	}
+	backendProxy := httputil.NewSingleHostReverseProxy(gw.Backend)
 	mux := http.NewServeMux()
 	bp := gw.BasePath
 	if len(bp) > 0 && (bp[len(bp)-1:] == "/" || bp[0:1] != "/") {
 		panic("Invalid gateway base path")
 	}
+
 	middleware := func(handler http.Handler) http.HandlerFunc {
 		return prometheusMiddleware(rateLimiterMiddleware(handler))
 	}
 	mux.Handle(bp+"/", middleware(http.HandlerFunc(gw.handleWebRoot)))
+	mux.Handle(bp+"/api/", backendProxy)
 	// Prometheus metrics endpoint
 	mux.Handle(bp+"/metrics", middleware(
 		promhttp.Handler()))

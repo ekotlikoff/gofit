@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/url"
 	"os"
+	"strconv"
 
 	// Blank import to embed config.json
 	_ "embed"
 
 	gateway "github.com/ekotlikoff/gofit/internal/frontend"
+	"github.com/ekotlikoff/gofit/internal/server"
 )
 
 //go:embed config.json
@@ -23,6 +26,7 @@ type (
 		Environment string
 		BasePath    string
 		GatewayPort int
+		ServerPort  int
 		LogFile     string
 		Quiet       bool
 	}
@@ -37,10 +41,18 @@ func RunServer() {
 // RunServerWithConfig runs the gochess server with a custom config
 func RunServerWithConfig(config Configuration) {
 	configureLogging(config)
+	fitserver := server.FitServer{
+		BasePath: config.BasePath,
+		Port:     config.ServerPort,
+	}
+	go fitserver.Serve()
+	serverURL, _ := url.Parse("http://localhost:" + strconv.Itoa(config.ServerPort))
 	gw := gateway.Gateway{
 		BasePath: config.BasePath,
 		Port:     config.GatewayPort,
+		Backend:  serverURL,
 	}
+
 	gw.Serve()
 }
 

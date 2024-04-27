@@ -38,9 +38,26 @@
 		init();
 
 		function init() {
+			fetchWorkout();
 			currentExercise = 0;
 			currentReps = 0;
 			setCurrentExerciseText();
+		}
+
+		function fetchWorkout() {
+			fetch(location.pathname + '/api/workout')
+				.then((response) => {
+					if (!response.ok) {
+						throw new Error(`HTTP error ${response.status}`);
+					}
+					return response.text(); // Or `.json()` or one of the others
+				})
+				.then((data) => {
+					console.log(data);
+				})
+				.catch((error) => {
+					// ...handle/report error...
+				});
 		}
 
 		function setCurrentExerciseText() {
