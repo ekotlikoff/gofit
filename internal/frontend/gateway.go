@@ -29,7 +29,7 @@ var (
 
 	gatewayRateLimiterMetric = prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
-			Namespace: "gochess",
+			Namespace: "gofit",
 			Subsystem: "gateway",
 			Name:      "rate_limiter_length",
 			Help:      "Length of the rateLimiter channel.",
@@ -41,7 +41,7 @@ var (
 
 	gatewayResponseMetric = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: "gochess",
+			Namespace: "gofit",
 			Subsystem: "gateway",
 			Name:      "request_total",
 			Help:      "Total number of requests serviced.",
@@ -51,7 +51,7 @@ var (
 
 	gatewayResponseDurationMetric = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Namespace: "gochess",
+			Namespace: "gofit",
 			Subsystem: "gateway",
 			Name:      "request_duration",
 			Help:      "Duration of requests serviced.",

@@ -32,13 +32,13 @@ type (
 	}
 )
 
-// RunServer runs the gochess server
+// RunServer runs the gofit server
 func RunServer() {
 	c := loadConfig()
 	RunServerWithConfig(c)
 }
 
-// RunServerWithConfig runs the gochess server with a custom config
+// RunServerWithConfig runs the gofit server with a custom config
 func RunServerWithConfig(config Configuration) {
 	configureLogging(config)
 	fitserver := server.FitServer{
