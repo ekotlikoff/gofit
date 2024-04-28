@@ -5,27 +5,20 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"strconv"
 
 	"github.com/ekotlikoff/gofit/internal/model"
 )
 
-// FitServer handles http requests from clients
-type FitServer struct {
-	BasePath string
-	Port     int
+type UserSession struct {
+	Username      string        `json:"username"`
+	DoneForTheDay bool          `json:"doneForTheDay"`
+	Workout       model.Workout `json:"workout"`
 }
 
-// Serve the http server
-func (fitServer *FitServer) Serve() {
-	bp := fitServer.BasePath
-	if len(bp) > 0 && (bp[len(bp)-1:] == "/" || bp[0:1] != "/") {
-		panic("Invalid gateway base path")
-	}
-	mux := http.NewServeMux()
-	mux.Handle(bp+"/api/workout", makeWorkoutHandler())
-	log.Println("HTTP server listening on port", fitServer.Port, "...")
-	http.ListenAndServe(":"+strconv.Itoa(fitServer.Port), mux)
+// GetUser creates a user object for an authenticated user
+func GetUser(username string) UserSession {
+	// TODO get user's state (DoneForTheDay/Done/Workout)
+	return UserSession{Username: username}
 }
 
 // SetQuiet logging
@@ -42,6 +35,15 @@ func makeWorkoutHandler() http.Handler {
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
+			session := GetSession(w, r)
+			session.Workout = workout
+		case "POST":
+			session := GetSession(w, r)
+			if session.Workout.Done >= len(session.Workout.Movements) {
+				session.DoneForTheDay = true
+				return
+			}
+			session.Workout.Done++
 		}
 	}
 	return http.HandlerFunc(handler)

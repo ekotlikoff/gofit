@@ -20,6 +20,15 @@
 		<button id="pauseButton" class="hidden" onClick="pause()">Pause</button>
 		<button id="resumeButton" class="hidden" onClick="resume()">Resume</button>
 	</div>
+	<div id="auth">
+		<label for="usernameInput">Username:</label>
+		<input id="usernameInput" type="text" />
+		<label for="passwordInput">Password:</label>
+		<input id="passwordInput" type="password" />
+		<button id="loginButton" onClick="login()">Login</button>
+		<button id="registerButton" onClick="register()">Register</button>
+	</div>
+
 	<audio id="timeTickSound" src="beep.mp3"></audio>
 	<audio id="startSound" src="start.mp3"></audio>
 	<audio id="stopSound" src="stop.mp3"></audio>
@@ -37,11 +46,32 @@
 		init();
 
 		function init() {
-			fetchWorkout();
+			getSession();
+		}
+
+		function getSession() {
+			fetch(location.pathname + 'session')
+				.then((response) => {
+					if (!response.ok) {
+						throw new Error(`HTTP error ${response.status}`);
+					}
+					return response.text(); // Or `.json()` or one of the others
+				})
+				.then((data) => {
+					res = JSON.parse(data);
+					// TODO if res.doneForTheDay
+					// TODO display username somewhere
+					document.getElementById("auth").classList.add("hidden");
+					workout = res.workout.movements;
+					currentMovement = res.workout.done;
+					currentReps = 0;
+					setCurrentMovementText();
+					document.getElementById("startButton").classList.remove("hidden");
+				}).catch(() => { });
 		}
 
 		function fetchWorkout() {
-			fetch(location.pathname + '/api/workout')
+			fetch(location.pathname + 'workout')
 				.then((response) => {
 					if (!response.ok) {
 						throw new Error(`HTTP error ${response.status}`);
@@ -57,6 +87,16 @@
 					setCurrentMovementText();
 					document.getElementById("startButton").classList.remove("hidden");
 				});
+		}
+
+		function sendServerWorkoutUpdate() {
+			fetch(location.pathname + 'workout', {method: "POST"})
+				.then((response) => {
+					if (!response.ok) {
+						throw new Error(`HTTP error ${response.status}`);
+					}
+					return response.text(); // Or `.json()` or one of the others
+				}).catch(() => { });
 		}
 
 		function setCurrentMovementText() {
@@ -79,6 +119,7 @@
 			timer = new Timer();
 			document.getElementById("startButton").classList.add("hidden");
 			document.getElementById("pauseButton").classList.remove("hidden");
+			document.getElementById("auth").classList.add("hidden");
 			startRep(workout[currentMovement]);
 		}
 
@@ -91,6 +132,48 @@
 			timer.start()
 			document.getElementById("resumeButton").classList.add("hidden");
 			document.getElementById("pauseButton").classList.remove("hidden");
+		}
+
+		function register() {
+			creds = {
+				username: document.getElementById("usernameInput").value,
+				password: document.getElementById("passwordInput").value
+			};
+			fetch(location.pathname + 'register', {
+				method: "POST",
+				body: JSON.stringify(creds),
+			})
+				.then((response) => {
+					if (!response.ok) {
+						throw new Error(`HTTP error ${response.status}`);
+					}
+					return response.text(); // Or `.json()` or one of the others
+				})
+				.then((data) => {
+					document.getElementById("auth").classList.add("hidden");
+					fetchWorkout();
+				}).catch(() => { });
+		}
+
+		function login() {
+			creds = {
+				username: document.getElementById("usernameInput").value,
+				password: document.getElementById("passwordInput").value
+			};
+			fetch(location.pathname + 'session', {
+				method: "POST",
+				body: JSON.stringify(creds),
+			})
+				.then((response) => {
+					if (!response.ok) {
+						throw new Error(`HTTP error ${response.status}`);
+					}
+					return response.text(); // Or `.json()` or one of the others
+				})
+				.then((data) => {
+					document.getElementById("auth").classList.add("hidden");
+					fetchWorkout();
+				}).catch(() => { });
 		}
 
 		function startRep(movement) {
@@ -129,6 +212,7 @@
 		}
 
 		function nextMovement() {
+			sendServerWorkoutUpdate();
 			currentReps = 0;
 			currentMovement++;
 			document.getElementById("pauseButton").classList.add("hidden");

@@ -5,14 +5,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net/url"
 	"os"
-	"strconv"
 
 	// Blank import to embed config.json
 	_ "embed"
 
-	gateway "github.com/ekotlikoff/gofit/internal/frontend"
 	"github.com/ekotlikoff/gofit/internal/server"
 )
 
@@ -41,16 +38,9 @@ func RunServer() {
 // RunServerWithConfig runs the gofit server with a custom config
 func RunServerWithConfig(config Configuration) {
 	configureLogging(config)
-	fitserver := server.FitServer{
-		BasePath: config.BasePath,
-		Port:     config.ServerPort,
-	}
-	go fitserver.Serve()
-	serverURL, _ := url.Parse("http://localhost:" + strconv.Itoa(config.ServerPort))
-	gw := gateway.Gateway{
+	gw := server.Server{
 		BasePath: config.BasePath,
 		Port:     config.GatewayPort,
-		Backend:  serverURL,
 	}
 
 	gw.Serve()
