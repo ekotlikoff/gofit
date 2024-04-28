@@ -59,9 +59,17 @@
 				})
 				.then((data) => {
 					res = JSON.parse(data);
-					// TODO if res.doneForTheDay
-					// TODO display username somewhere
 					document.getElementById("auth").classList.add("hidden");
+					nowStr = new Date().toLocaleDateString();
+					if (res.workoutDay != nowStr) {
+						console.log("Session's workout was for a prior day, fetching a new one");
+						fetchWorkout();
+						return
+					}
+					if (res.doneForTheDay) {
+						document.getElementById("currentMovement").innerText = "Done for the day!";
+						return
+					}
 					workout = res.workout.movements;
 					currentMovement = res.workout.done;
 					currentReps = 0;
@@ -71,7 +79,8 @@
 		}
 
 		function fetchWorkout() {
-			fetch(location.pathname + 'workout')
+			nowStr = new Date().toLocaleDateString();
+			fetch(location.pathname + 'workout', {method: "POST", body: JSON.stringify(nowStr)})
 				.then((response) => {
 					if (!response.ok) {
 						throw new Error(`HTTP error ${response.status}`);
@@ -90,7 +99,7 @@
 		}
 
 		function sendServerWorkoutUpdate() {
-			fetch(location.pathname + 'workout', {method: "POST"})
+			fetch(location.pathname + 'workoutUpdate', {method: "POST"})
 				.then((response) => {
 					if (!response.ok) {
 						throw new Error(`HTTP error ${response.status}`);

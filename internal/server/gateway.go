@@ -80,7 +80,9 @@ var (
 )
 
 func init() {
-	sessionCache = NewTTLMap(50, 1800, 10)
+	monthSecs := 30 * 24 * 60 * 60
+	hourSecs := 60 * 60
+	sessionCache = NewTTLMap(50, monthSecs, hourSecs)
 	initAuth()
 
 	prometheus.MustRegister(serverResponseMetric)
@@ -119,7 +121,8 @@ func (gw *Server) Serve() {
 	mux.Handle(bp+"/", middleware(http.HandlerFunc(gw.handleWebRoot)))
 	mux.Handle(bp+"/register", middleware(http.HandlerFunc(Register)))
 	mux.Handle(bp+"/session", middleware(http.HandlerFunc(Session)))
-	mux.Handle(bp+"/workout", middleware(makeWorkoutHandler()))
+	mux.Handle(bp+"/workout", middleware(makeFetchWorkoutHandler()))
+	mux.Handle(bp+"/workoutUpdate", middleware(makeWorkoutUpdateHandler()))
 	// Prometheus metrics endpoint
 	mux.Handle(bp+"/metrics", middleware(
 		promhttp.Handler()))
@@ -231,7 +234,7 @@ func newSession(w http.ResponseWriter, r *http.Request, creds Credentials) {
 	}
 	sessionTokenStr := sessionToken.String()
 	user := GetUser(creds.Username)
-	log.Println("Adding to sessionCache,", creds.Username, sessionTokenStr)
+	log.Println("Adding to sessionCache,", creds.Username)
 	err = sessionCache.Put(sessionTokenStr, &user)
 	if err != nil {
 		log.Println("Failed to store session token in sessionCache")

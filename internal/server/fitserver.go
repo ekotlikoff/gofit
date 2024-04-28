@@ -13,11 +13,11 @@ type UserSession struct {
 	Username      string        `json:"username"`
 	DoneForTheDay bool          `json:"doneForTheDay"`
 	Workout       model.Workout `json:"workout"`
+	WorkoutDay    string        `json:"workoutDay"`
 }
 
 // GetUser creates a user object for an authenticated user
 func GetUser(username string) UserSession {
-	// TODO get user's state (DoneForTheDay/Done/Workout)
 	return UserSession{Username: username}
 }
 
@@ -26,17 +26,9 @@ func SetQuiet() {
 	log.SetOutput(ioutil.Discard)
 }
 
-func makeWorkoutHandler() http.Handler {
+func makeWorkoutUpdateHandler() http.Handler {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case "GET":
-			workout := model.MakeWorkout()
-			if err := json.NewEncoder(w).Encode(workout); err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-			session := GetSession(w, r)
-			session.Workout = workout
 		case "POST":
 			session := GetSession(w, r)
 			if session.Workout.Done >= len(session.Workout.Movements) {
@@ -44,6 +36,29 @@ func makeWorkoutHandler() http.Handler {
 				return
 			}
 			session.Workout.Done++
+		}
+	}
+	return http.HandlerFunc(handler)
+}
+
+func makeFetchWorkoutHandler() http.Handler {
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "POST":
+			var workoutDay string
+			err := json.NewDecoder(r.Body).Decode(&workoutDay)
+			if err != nil {
+				log.Println("ERROR parsing workout body")
+			}
+			workout := model.MakeWorkout()
+			if err := json.NewEncoder(w).Encode(workout); err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			session := GetSession(w, r)
+			session.Workout = workout
+			session.DoneForTheDay = false
+			session.WorkoutDay = workoutDay
 		}
 	}
 	return http.HandlerFunc(handler)
