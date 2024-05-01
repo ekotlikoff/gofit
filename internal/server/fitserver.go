@@ -31,6 +31,9 @@ func makeWorkoutUpdateHandler() http.Handler {
 		switch r.Method {
 		case "POST":
 			session := GetSession(w, r)
+			if session == nil {
+				return
+			}
 			if session.Workout.Done >= len(session.Workout.Movements) {
 				session.DoneForTheDay = true
 				return
@@ -45,6 +48,10 @@ func makeFetchWorkoutHandler() http.Handler {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case "POST":
+			session := GetSession(w, r)
+			if session == nil {
+				return
+			}
 			var workoutDay string
 			err := json.NewDecoder(r.Body).Decode(&workoutDay)
 			if err != nil {
@@ -55,7 +62,6 @@ func makeFetchWorkoutHandler() http.Handler {
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
-			session := GetSession(w, r)
 			session.Workout = workout
 			session.DoneForTheDay = false
 			session.WorkoutDay = workoutDay
