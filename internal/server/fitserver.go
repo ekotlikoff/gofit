@@ -39,6 +39,9 @@ func makeWorkoutUpdateHandler() http.Handler {
 				return
 			}
 			session.Workout.Done++
+		default:
+			w.WriteHeader(http.StatusBadRequest)
+
 		}
 	}
 	return http.HandlerFunc(handler)
@@ -65,6 +68,8 @@ func makeFetchWorkoutHandler() http.Handler {
 			session.Workout = workout
 			session.DoneForTheDay = false
 			session.WorkoutDay = workoutDay
+		default:
+			w.WriteHeader(http.StatusBadRequest)
 		}
 	}
 	return http.HandlerFunc(handler)
