@@ -38,7 +38,7 @@
 <body>
 
 	<script>
-		let workout = [{name: "squat", reps: 2, duration: 4}, {name: "lying hamstring stretch", reps: 2, duration: 10}];
+		let workout = [{name: "squat", reps: 2, duration: 4 * 1000 * 1000}, {name: "lying hamstring stretch", reps: 2, duration: 10 * 1000 * 1000}];
 		let timer, timerId, currentReps, movementSecondsRemaining;
 		let msBetweenReps = 2000;
 		let msBeforeReps = 2000;
@@ -194,12 +194,12 @@
 				if (timerTime < msBeforeReps) {
 					return;
 				}
-				const movementMs = movement.duration * 1000;
+				const movementMs = movement.duration / 1000 / 1000;
 				const totalRepMs = movementMs + msBeforeReps + msBetweenReps;
 				const newTimeRemaining = Math.ceil((movementMs - (timerTime - msBeforeReps)) / 1000);
 				if (newTimeRemaining != movementSecondsRemaining && newTimeRemaining >= 0) {
 					movementSecondsRemaining = newTimeRemaining;
-					setTimeText(Math.min(movement.duration, movementSecondsRemaining));
+					setTimeText(Math.min(movement.duration / 1000 / 1000, movementSecondsRemaining));
 					if (movementSecondsRemaining > 0) {
 						document.getElementById('timeTickSound').play();
 					} else if (movementSecondsRemaining == 0) {
