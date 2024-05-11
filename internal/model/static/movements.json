@@ -258,7 +258,7 @@
         "Effort": "medium"
     },
     {
-        "Name": "clam shell",
+        "Name": "clamshell",
         "reps": 8,
         "Duration": 4,
         "IterationsPerRep": null,
@@ -530,5 +530,56 @@
         "SwitchSides": null,
         "Requirements": "band",
         "Effort": "medium"
+    },
+    {
+        "Name": "downward facing dog",
+        "reps": 2,
+        "Duration": 10,
+        "IterationsPerRep": null,
+        "IterationNames": null,
+        "Position": "ground",
+        "Modality": "mobility",
+        "Focus": [
+            "hip",
+            "back",
+            "knee"
+        ],
+        "SwitchSides": null,
+        "Requirements": null,
+        "Effort": "medium"
+    },
+    {
+        "Name": "ground sweeps",
+        "reps": 10,
+        "Duration": 2,
+        "IterationsPerRep": null,
+        "IterationNames": null,
+        "Position": "standing",
+        "Modality": "mobility",
+        "Focus": [
+            "hip",
+            "back",
+            "knee"
+        ],
+        "SwitchSides": null,
+        "Requirements": null,
+        "Effort": "medium"
+    },
+    {
+        "Name": "seal stretch",
+        "reps": 2,
+        "Duration": 10,
+        "IterationsPerRep": null,
+        "IterationNames": null,
+        "Position": "ground",
+        "Modality": "mobility",
+        "Focus": [
+            "hip",
+            "back",
+            "knee"
+        ],
+        "SwitchSides": null,
+        "Requirements": null,
+        "Effort": "low"
     }
 ]
