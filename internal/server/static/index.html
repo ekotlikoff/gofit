@@ -15,6 +15,7 @@
 	<div id="movement" class="hidden"> </div>
 	<div id="reps" class="hidden"> </div>
 	<div id="time" class="hidden"> </div>
+	<div id="status" class="hidden"> </div>
 	<div>
 		<button id="startButton" class="hidden" onClick="start()">Start</button>
 		<button id="pauseButton" class="hidden" onClick="pause()">Pause</button>
@@ -38,15 +39,17 @@
 <body>
 
 	<script>
-		let workout = [{name: "squat", reps: 2, duration: 4 * 1000 * 1000}, {name: "lying hamstring stretch", reps: 2, duration: 10 * 1000 * 1000}];
+		let workout = [{name: "lying hamstring stretch", reps: 2, duration: 1 * 1000 * 1000, switchSides: true}];
 		let timer, timerId, currentReps, movementSecondsRemaining;
 		let msBetweenReps = 2000;
 		let msBeforeReps = 2000;
+		let switchSidesMs = 3000;
 		let currentMovement = 0;
 		let wakeLock = null;
 		// state = (in_exercise_started, in_exercise_paused, null)
 		let state = null;
 		let DEBUG = false;
+		let LOCAL_WORKOUT = false;
 		function debug_log() {
 			if (DEBUG) {
 				console.log.apply(this, arguments);
@@ -55,7 +58,14 @@
 		init();
 
 		function init() {
-			getSession();
+			if (LOCAL_WORKOUT) {
+				currentReps = 0;
+				setCurrentMovementText();
+				document.getElementById("auth").classList.add("hidden");
+				document.getElementById("startButton").classList.remove("hidden");
+			} else {
+				getSession();
+			}
 			document.addEventListener("visibilitychange", (event) => {
 				if (document.visibilityState != "visible") {
 					pause();
@@ -129,7 +139,11 @@
 		}
 
 		function setRepsText() {
+			document.getElementById("currentMovement").classList.remove("hidden");
+			document.getElementById("movement").classList.remove("hidden");
 			document.getElementById("reps").classList.remove("hidden");
+			document.getElementById("time").classList.remove("hidden");
+			document.getElementById("pauseButton").classList.remove("hidden");
 			document.getElementById("reps").innerText = "Reps: " + (currentReps + 1) + " / " + workout[currentMovement].reps;
 		}
 
@@ -238,6 +252,7 @@
 
 		function startRep(movement) {
 			timer.start();
+			state = "in_exercise_started";
 			setRepsText();
 			requestWakeLock();
 			document.getElementById('startSound').play();
@@ -262,7 +277,9 @@
 					currentReps++;
 					releaseWakeLock();
 					clearInterval(timerId);
-					if (currentReps < workout[currentMovement].reps) {
+					if (workout[currentMovement].switchSides && currentReps == workout[currentMovement].reps / 2) {
+						switchSides(movement);
+					} else if (currentReps < workout[currentMovement].reps) {
 						timer.stop();
 						timer.reset();
 						startRep(movement);
@@ -271,6 +288,26 @@
 					}
 				}
 			}, 10)
+		}
+
+		function switchSides(movement) {
+			state = null;
+			timer.stop();
+			timer.reset();
+			timer.start();
+			setStatus("Switch sides");
+			timerId = setInterval(() => {
+				const timerTime = timer.getTime();
+				const timeRemaining = Math.ceil((switchSidesMs - timerTime) / 1000);
+				setTimeText(Math.min(switchSidesMs / 1000, timeRemaining));
+				if (timer.getTime() >= switchSidesMs) {
+					clearStatus();
+					clearInterval(timerId);
+					timer.stop();
+					timer.reset();
+					startRep(movement);
+				}
+			}, 10);
 		}
 
 		function nextMovement() {
@@ -285,9 +322,24 @@
 				document.getElementById("startButton").classList.remove("hidden");
 				setCurrentMovementText();
 			} else {
-				document.getElementById("currentMovement").innerText = "Done for the day!";
+				setStatus("Done for the day!");
 				document.getElementById('successSound').play();
 			}
+		}
+
+		function setStatus(status) {
+			document.getElementById("pauseButton").classList.add("hidden");
+			document.getElementById("currentMovement").classList.add("hidden");
+			document.getElementById("movement").classList.add("hidden");
+			document.getElementById("reps").classList.add("hidden");
+			document.getElementById("time").classList.add("hidden");
+			document.getElementById("status").classList.remove("hidden");
+			document.getElementById("status").innerText = status;
+		}
+
+		function clearStatus() {
+			document.getElementById("status").classList.add("hidden");
+			document.getElementById("status").innerText = "";
 		}
 
 

@@ -561,7 +561,7 @@
             "back",
             "knee"
         ],
-        "SwitchSides": null,
+        "SwitchSides": true,
         "Requirements": null,
         "Effort": "medium"
     },
