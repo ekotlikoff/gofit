@@ -10,11 +10,19 @@
 			display: none;
 		}
 
+		.center {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			height: 100vh;
+			text-align: center;
+			font-size: 30px;
+		}
+
 	</style>
 	<div id="currentMovement" class="hidden"> </div>
 	<div id="movement" class="hidden"> </div>
 	<div id="reps" class="hidden"> </div>
-	<div id="time" class="hidden"> </div>
 	<div id="status" class="hidden"> </div>
 	<div>
 		<button id="startButton" class="hidden" onClick="start()">Start</button>
@@ -29,6 +37,8 @@
 		<button id="loginButton" onClick="login()">Login</button>
 		<button id="registerButton" onClick="register()">Register</button>
 	</div>
+
+	<div id="time" class="hidden"> </div>
 
 	<audio id="timeTickSound" src="beep.mp3"></audio>
 	<audio id="startSound" src="start.mp3"></audio>
@@ -74,7 +84,7 @@
 		}
 
 		function getSession() {
-			fetch(location.pathname + 'session')
+			fetch(location.pathname + "session")
 				.then((response) => {
 					if (!response.ok) {
 						throw new Error(`HTTP error ${response.status}`);
@@ -104,7 +114,7 @@
 
 		function fetchWorkout() {
 			nowStr = new Date().toLocaleDateString();
-			fetch(location.pathname + 'workout', {method: "POST", body: JSON.stringify(nowStr)})
+			fetch(location.pathname + "workout", {method: "POST", body: JSON.stringify(nowStr)})
 				.then((response) => {
 					if (!response.ok) {
 						throw new Error(`HTTP error ${response.status}`);
@@ -123,7 +133,7 @@
 		}
 
 		function sendServerWorkoutUpdate() {
-			fetch(location.pathname + 'workoutUpdate', {method: "POST"})
+			fetch(location.pathname + "workoutUpdate", {method: "POST"})
 				.then((response) => {
 					if (!response.ok) {
 						throw new Error(`HTTP error ${response.status}`);
@@ -143,13 +153,15 @@
 			document.getElementById("movement").classList.remove("hidden");
 			document.getElementById("reps").classList.remove("hidden");
 			document.getElementById("time").classList.remove("hidden");
+			document.getElementById("time").classList.add("center");
 			document.getElementById("pauseButton").classList.remove("hidden");
 			document.getElementById("reps").innerText = "Reps: " + (currentReps + 1) + " / " + workout[currentMovement].reps;
 		}
 
 		function setTimeText(time) {
 			document.getElementById("time").classList.remove("hidden");
-			document.getElementById('time').innerText = "Time: " + time;
+			document.getElementById("time").classList.add("center");
+			document.getElementById("time").innerText = time;
 		}
 
 		function start() {
@@ -189,7 +201,7 @@
 				username: document.getElementById("usernameInput").value,
 				password: document.getElementById("passwordInput").value
 			};
-			fetch(location.pathname + 'register', {
+			fetch(location.pathname + "register", {
 				method: "POST",
 				body: JSON.stringify(creds),
 			})
@@ -210,7 +222,7 @@
 				username: document.getElementById("usernameInput").value,
 				password: document.getElementById("passwordInput").value
 			};
-			fetch(location.pathname + 'session', {
+			fetch(location.pathname + "session", {
 				method: "POST",
 				body: JSON.stringify(creds),
 			})
@@ -228,11 +240,11 @@
 
 		async function requestWakeLock() {
 			try {
-				wakeLock = await navigator.wakeLock.request('screen');
-				wakeLock.addEventListener('release', () => {
-					debug_log('Wake Lock was released');
+				wakeLock = await navigator.wakeLock.request("screen");
+				wakeLock.addEventListener("release", () => {
+					debug_log("Wake Lock was released");
 				});
-				debug_log('Wake Lock is active');
+				debug_log("Wake Lock is active");
 			} catch (err) {
 				console.error(`${err.name}, ${err.message}`);
 			}
@@ -255,7 +267,7 @@
 			state = "in_exercise_started";
 			setRepsText();
 			requestWakeLock();
-			document.getElementById('startSound').play();
+			document.getElementById("startSound").play();
 			timerId = setInterval(() => {
 				const timerTime = timer.getTime();
 				if (timerTime < msBeforeReps) {
@@ -268,9 +280,9 @@
 					movementSecondsRemaining = newTimeRemaining;
 					setTimeText(Math.min(movement.duration / 1000 / 1000, movementSecondsRemaining));
 					if (movementSecondsRemaining > 0) {
-						document.getElementById('timeTickSound').play();
+						document.getElementById("timeTickSound").play();
 					} else if (movementSecondsRemaining == 0) {
-						document.getElementById('stopSound').play();
+						document.getElementById("stopSound").play();
 					}
 				}
 				if (timer.getTime() >= totalRepMs) {
@@ -316,6 +328,7 @@
 			currentMovement++;
 			state = null;
 			document.getElementById("pauseButton").classList.add("hidden");
+			document.getElementById("time").classList.remove("center");
 			document.getElementById("time").classList.add("hidden");
 			document.getElementById("reps").classList.add("hidden");
 			if (currentMovement < workout.length) {
@@ -323,7 +336,7 @@
 				setCurrentMovementText();
 			} else {
 				setStatus("Done for the day!");
-				document.getElementById('successSound').play();
+				document.getElementById("successSound").play();
 			}
 		}
 
@@ -332,6 +345,7 @@
 			document.getElementById("currentMovement").classList.add("hidden");
 			document.getElementById("movement").classList.add("hidden");
 			document.getElementById("reps").classList.add("hidden");
+			document.getElementById("time").classList.remove("center");
 			document.getElementById("time").classList.add("hidden");
 			document.getElementById("status").classList.remove("hidden");
 			document.getElementById("status").innerText = status;
@@ -359,7 +373,7 @@
 
 			start() {
 				if (this.isRunning) {
-					return console.error('Timer is already running');
+					return console.error("Timer is already running");
 				}
 				this.isRunning = true;
 				this.startTime = Date.now();
@@ -367,7 +381,7 @@
 
 			stop() {
 				if (!this.isRunning) {
-					return console.error('Timer is already stopped');
+					return console.error("Timer is already stopped");
 				}
 				this.isRunning = false;
 				this.overallTime = this.overallTime + this._getTimeElapsedSinceLastStart();
