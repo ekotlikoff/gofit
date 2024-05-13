@@ -43,10 +43,24 @@
 		let msBetweenReps = 2000;
 		let msBeforeReps = 2000;
 		let currentMovement = 0;
+		let wakeLock = null;
+		// state = (in_exercise_started, in_exercise_paused, null)
+		let state = null;
+		let DEBUG = false;
+		function debug_log() {
+			if (DEBUG) {
+				console.log.apply(this, arguments);
+			}
+		}
 		init();
 
 		function init() {
 			getSession();
+			document.addEventListener("visibilitychange", (event) => {
+				if (document.visibilityState != "visible") {
+					pause();
+				}
+			});
 		}
 
 		function getSession() {
@@ -62,7 +76,7 @@
 					document.getElementById("auth").classList.add("hidden");
 					nowStr = new Date().toLocaleDateString();
 					if (res.workoutDay != nowStr) {
-						console.log("Session's workout was for a prior day, fetching a new one");
+						debug_log("Session's workout was for a prior day, fetching a new one");
 						fetchWorkout();
 						return
 					}
@@ -130,17 +144,30 @@
 			document.getElementById("pauseButton").classList.remove("hidden");
 			document.getElementById("auth").classList.add("hidden");
 			startRep(workout[currentMovement]);
+			state = "in_exercise_started";
 		}
 
 		function pause() {
+			if (state != "in_exercise_started") {
+				debug_log("Can't pause, not started");
+				return;
+			}
 			timer.stop()
+			releaseWakeLock();
 			document.getElementById("pauseButton").classList.add("hidden");
 			document.getElementById("resumeButton").classList.remove("hidden");
+			state = "in_exercise_paused";
 		}
 		function resume() {
+			if (state != "in_exercise_paused") {
+				debug_log("Can't resume, not paused");
+				return;
+			}
 			timer.start()
+			requestWakeLock();
 			document.getElementById("resumeButton").classList.add("hidden");
 			document.getElementById("pauseButton").classList.remove("hidden");
+			state = "in_exercise_started";
 		}
 
 		function register() {
@@ -185,9 +212,34 @@
 				}).catch(() => { });
 		}
 
+		async function requestWakeLock() {
+			try {
+				wakeLock = await navigator.wakeLock.request('screen');
+				wakeLock.addEventListener('release', () => {
+					debug_log('Wake Lock was released');
+				});
+				debug_log('Wake Lock is active');
+			} catch (err) {
+				console.error(`${err.name}, ${err.message}`);
+			}
+		}
+
+		async function releaseWakeLock() {
+			if (!wakeLock) {
+				return;
+			}
+			try {
+				await wakeLock.release();
+				wakeLock = null;
+			} catch (err) {
+				console.error(`${err.name}, ${err.message}`);
+			}
+		}
+
 		function startRep(movement) {
 			timer.start();
 			setRepsText();
+			requestWakeLock();
 			document.getElementById('startSound').play();
 			timerId = setInterval(() => {
 				const timerTime = timer.getTime();
@@ -208,6 +260,7 @@
 				}
 				if (timer.getTime() >= totalRepMs) {
 					currentReps++;
+					releaseWakeLock();
 					clearInterval(timerId);
 					if (currentReps < workout[currentMovement].reps) {
 						timer.stop();
@@ -224,6 +277,7 @@
 			sendServerWorkoutUpdate();
 			currentReps = 0;
 			currentMovement++;
+			state = null;
 			document.getElementById("pauseButton").classList.add("hidden");
 			document.getElementById("time").classList.add("hidden");
 			document.getElementById("reps").classList.add("hidden");
