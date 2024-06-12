@@ -487,7 +487,7 @@
         "Effort": "low"
     },
     {
-        "Name": "banded rotation pull aparts",
+        "Name": "banded pull aparts",
         "reps": 8,
         "Duration": 5,
         "IterationNames": null,

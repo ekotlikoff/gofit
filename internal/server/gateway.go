@@ -1,7 +1,6 @@
 package server
 
 import (
-	"embed"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -10,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/ekotlikoff/gofit/internal/static"
 	"github.com/gofrs/uuid"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -25,9 +25,6 @@ var (
 	sessionCache *TTLMap
 
 	rateLimiter = make(chan time.Time, maxBurstOfRequests)
-
-	//go:embed static
-	webStaticFS embed.FS
 
 	serverRateLimiterMetric = prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
@@ -151,11 +148,11 @@ func setupRateLimiter(cleanupChan chan struct{}) {
 func (gw *Server) handleWebRoot(w http.ResponseWriter, r *http.Request) {
 	bp := gw.BasePath
 	if len(bp) > 0 && len(r.URL.Path) > len(bp) && r.URL.Path[0:len(bp)] == bp {
-		r.URL.Path = "/static" + r.URL.Path[len(bp):]
+		r.URL.Path = "/webpage" + r.URL.Path[len(bp):]
 	} else {
-		r.URL.Path = "/static" + r.URL.Path // This is a hack to get the embedded path
+		r.URL.Path = "/webpage" + r.URL.Path // This is a hack to get the embedded path
 	}
-	http.FileServer(http.FS(webStaticFS)).ServeHTTP(w, r)
+	http.FileServer(http.FS(static.WebpageStaticFS)).ServeHTTP(w, r)
 }
 
 // Register a new user, credit to https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html

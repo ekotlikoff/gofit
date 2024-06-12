@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"math/rand"
 	"time"
+
+	"github.com/ekotlikoff/gofit/internal/static"
 )
 
 const (
@@ -46,8 +48,6 @@ const (
 )
 
 var (
-	//go:embed static/movements.json
-	movementsFS  []byte
 	movementBank []Movement
 	allEfforts   = []Effort{Low, Medium, High}
 )
@@ -224,7 +224,7 @@ func queryMovements(position Position, efforts []Effort) []Movement {
 }
 
 func loadMovementBank() {
-	err := json.Unmarshal(movementsFS, &movementBank)
+	err := json.Unmarshal(static.MovementsFS, &movementBank)
 	if err != nil {
 		fmt.Println("ERROR:", err)
 	}
