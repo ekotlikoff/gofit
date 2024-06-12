@@ -116,6 +116,7 @@
 			<input class="text-input" id="passwordInput" type="password" placeholder="Password">
 		</div>
 	</div>
+	<img id="movementImage" class="hidden" style="height:605px;top:-50px;position:fixed">
 	<div class="timer-container">
 		<svg class="progress-ring" width="120" height="120">
 			<circle id="progress-ring" class="progress-ring-circle hidden" stroke="#4CAF50" stroke-width="4"
@@ -142,12 +143,15 @@
 <body>
 
 	<script>
-		let workout = [{name: "lying hamstring stretch", reps: 2, duration: 2 * 1000 * 1000 * 1000, switchSides: true}];
+		let workout = [{name: "childs pose", reps: 2, duration: 2 * 1000 * 1000 * 1000}, {name: "lying hamstring stretch", reps: 2, duration: 2 * 1000 * 1000 * 1000, switchSides: true}];
 		let timer, timerId, currentReps, movementSecondsRemaining;
-		let msBetweenReps = 2000;
-		let msBeforeReps = 2000;
+		let msBetweenIterations = 2000;
+		let msBeforeIterations = 2000;
 		let switchSidesMs = 3000;
 		let currentMovement = 0;
+		let performingRep = false;
+		let currentIteration = 0;
+		let defaultIterations = ["active"];
 		let wakeLock = null;
 		// state = (in_exercise_started, in_exercise_paused, null)
 		let state = null;
@@ -164,6 +168,7 @@
 			if (LOCAL_WORKOUT) {
 				currentReps = 0;
 				setCurrentMovementText();
+				setCurrentMovementImage();
 				document.getElementById("authButtons").classList.add("hidden");
 				document.getElementById("authContent").classList.add("hidden");
 				document.getElementById("startButton").classList.remove("hidden");
@@ -210,6 +215,7 @@
 					currentMovement = res.workout.done;
 					currentReps = 0;
 					setCurrentMovementText();
+					setCurrentMovementImage();
 					document.getElementById("startButton").classList.remove("hidden");
 				}).catch(() => { });
 		}
@@ -230,6 +236,7 @@
 				}).catch(() => { }).finally(() => {
 					currentReps = 0;
 					setCurrentMovementText();
+					setCurrentMovementImage();
 					document.getElementById("startButton").classList.remove("hidden");
 				});
 		}
@@ -242,6 +249,15 @@
 					}
 					return response.text(); // Or `.json()` or one of the others
 				}).catch(() => { });
+		}
+
+		function setCurrentMovementImage() {
+			document.getElementById("movementImage").classList.remove("hidden");
+			var imageToDisplay = "rest";
+			if (performingRep) {
+				imageToDisplay = getIteration();
+			}
+			document.getElementById("movementImage").src = "movement_images/" + workout[currentMovement].name + "/" + imageToDisplay + ".png";
 		}
 
 		function setCurrentMovementText() {
@@ -391,34 +407,74 @@
 			circle.style.strokeDashoffset = circumference;
 		}
 
+		function hasNextIteration() {
+			var iterations = defaultIterations;
+			if (workout[currentMovement].iterationNames) {
+				iterations = workout[currentMovement].iterationNames;
+			}
+			return currentIteration + 1 < iterations.length;
+		}
+
+		function nextIteration() {
+			var iterations = defaultIterations;
+			if (workout[currentMovement].iterationNames) {
+				iterations = workout[currentMovement].iterationNames;
+			}
+			if (++currentIteration >= iterations.length) {
+				currentIteration = 0;
+			}
+		}
+
+		function getIteration() {
+			var iterations = defaultIterations;
+			if (workout[currentMovement].iterationNames) {
+				iterations = workout[currentMovement].iterationNames;
+			}
+			return iterations[currentIteration];
+		}
+
 		function startRep(movement) {
 			timer.start();
 			state = "in_exercise_started";
 			setRepsText();
 			requestWakeLock();
 			document.getElementById("startSound").play();
+			performingRep = true;
+			setCurrentMovementImage();
 			timerId = setInterval(() => {
 				const timerTime = timer.getTime();
-				if (timerTime < msBeforeReps) {
+				if (timerTime < msBeforeIterations) {
 					return;
 				}
-				const totalMovementMs = movement.duration / 1000 / 1000;
-				const totalRepMs = totalMovementMs + msBeforeReps + msBetweenReps;
-				const movementMs = timerTime - msBeforeReps;
-				const newTimeRemaining = Math.ceil((totalMovementMs - movementMs) / 1000);
-				if (newTimeRemaining != movementSecondsRemaining && newTimeRemaining >= 0) {
-					movementSecondsRemaining = newTimeRemaining;
+				// Each movement is, for each iteration (default is just active)
+				// 1. msBeforeIterations in rest (start sound and image change)
+				// 2. movement.Duration in iteration(stop sound and image change)
+				// 3. msBetweenIteration in rest
+				const totalIterationMovementMs = movement.duration / 1000 / 1000;
+				const totalIterationMs = totalIterationMovementMs + msBeforeIterations + msBetweenIterations;
+				const movementMs = timerTime - msBeforeIterations;
+				const newSecondsRemaining = Math.ceil((totalIterationMovementMs - movementMs) / 1000);
+				if (newSecondsRemaining != movementSecondsRemaining && newSecondsRemaining >= 0) {
+					movementSecondsRemaining = newSecondsRemaining;
 					setTimeText(Math.min(movement.duration / 1000 / 1000, movementSecondsRemaining));
 					if (movementSecondsRemaining > 0) {
 						document.getElementById("timeTickSound").play();
 					} else if (movementSecondsRemaining == 0) {
 						document.getElementById("stopSound").play();
+						performingRep = false;
+						setCurrentMovementImage();
 					}
 				}
-				if (timerTime >= totalRepMs) {
+				if (timerTime >= totalIterationMs) {
 					resetProgressRing();
-					currentReps++;
-					releaseWakeLock();
+					if (hasNextIteration()) {
+						nextIteration();
+						setCurrentMovementImage();
+					} else {
+						currentIteration = 0;
+						currentReps++;
+						releaseWakeLock();
+					}
 					clearInterval(timerId);
 					if (workout[currentMovement].switchSides && currentReps == workout[currentMovement].reps / 2) {
 						switchSides(movement);
@@ -430,7 +486,7 @@
 						nextMovement();
 					}
 				} else {
-					const percentDone = Math.min(100, 100 * movementMs / totalMovementMs);
+					const percentDone = Math.min(100, 100 * movementMs / totalIterationMovementMs);
 					updateProgressRing(percentDone);
 				}
 			}, 10)
@@ -467,6 +523,7 @@
 			if (currentMovement < workout.length) {
 				document.getElementById("startButton").classList.remove("hidden");
 				setCurrentMovementText();
+				setCurrentMovementImage();
 			} else {
 				setStatus("Done for the day!");
 				document.getElementById("successSound").play();
