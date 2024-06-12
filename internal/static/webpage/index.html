@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>gofit</title>
+	<style type="text/css">
+		body {
+			font-family: Arial, sans-serif;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			height: 100vh;
+			margin: 0;
+			background-color: #f0f0f0;
+		}
+
+		.content {
+			flex: 1;
+			padding: 20px;
+			background-color: #f0f0f0;
+		}
+
+		.container {
+			text-align: center;
+			background: #ffffff;
+			border-radius: 10px;
+			padding: 20px;
+			box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+		}
+
+		.hidden {
+			display: none;
+		}
+
+		.timer-container {
+			position: relative;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			margin-bottom: 100px;
+		}
+
+		.timer {
+			position: absolute;
+			font-size: 30px;
+		}
+
+		.progress-ring-circle {
+			transition: 0.35s stroke-dasharray;
+			transform: rotate(-90deg);
+			transform-origin: 50% 50%;
+		}
+
+		.text-input {
+			display: block;
+			font-size: 1em;
+			padding: 10px;
+			margin: 10px 0;
+			max-width: 300px;
+			border: 1px solid #ccc;
+			border-radius: 5px;
+		}
+
+		.buttons {
+			position: fixed;
+			bottom: 0;
+			width: 100%;
+			background-color: #ffffff;
+			box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+			padding: 10px 0;
+			display: flex;
+			justify-content: center;
+			gap: 10px;
+		}
+
+		.buttons button {
+			font-size: 1em;
+			padding: 10px 20px;
+			margin: 0 10px;
+			border: none;
+			border-radius: 5px;
+			cursor: pointer;
+		}
+
+		.buttons .login {
+			background-color: #007bff;
+			color: #ffffff;
+		}
+
+		.buttons .register {
+			background-color: #6c757d;
+			color: #ffffff;
+		}
+
+		.buttons .pause {
+			background-color: #ff8c00;
+			color: #ffffff;
+		}
+
+		.buttons .continue {
+			background-color: #4caf50;
+			color: #ffffff;
+		}
+
+	</style>
+	<div class="content">
+		<div id="currentMovement" class="hidden"> </div>
+		<div id="movement" class="hidden"> </div>
+		<div id="reps" class="hidden"> </div>
+		<div id="status" class="hidden"> </div>
+		<div id="authContent" class="container">
+			<input class="text-input" id="usernameInput" type="text" placeholder="Username">
+			<input class="text-input" id="passwordInput" type="password" placeholder="Password">
+		</div>
+	</div>
+	<img id="movementImage" class="hidden" style="height:605px;top:-50px;position:fixed">
+	<div class="timer-container">
+		<svg class="progress-ring" width="120" height="120">
+			<circle id="progress-ring" class="progress-ring-circle hidden" stroke="#4CAF50" stroke-width="4"
+				fill="transparent" r="54" cx="60" cy="60" />
+		</svg>
+		<div id="time" class="timer hidden"> </div>
+	</div>
+	<div class="buttons">
+		<div id="authButtons">
+			<button class="button login" id="loginButton" onClick="login()">Login</button>
+			<button class="button register" id="registerButton" onClick="register()">Register</button>
+		</div>
+		<button id="startButton" class="button continue hidden" onClick="start()">Start</button>
+		<button id="pauseButton" class="button pause hidden" onClick="pause()">Pause</button>
+		<button id="resumeButton" class="button continue hidden" onClick="resume()">Resume</button>
+	</div>
+
+	<audio id="timeTickSound" src="beep.mp3"></audio>
+	<audio id="startSound" src="start.mp3"></audio>
+	<audio id="stopSound" src="stop.mp3"></audio>
+	<audio id="successSound" src="success.mp3"></audio>
+</head>
+
+<body>
+
+	<script>
+		let workout = [{name: "childs pose", reps: 2, duration: 2 * 1000 * 1000 * 1000}, {name: "lying hamstring stretch", reps: 2, duration: 2 * 1000 * 1000 * 1000, switchSides: true}];
+		let timer, timerId, currentReps, movementSecondsRemaining;
+		let msBetweenIterations = 2000;
+		let msBeforeIterations = 2000;
+		let switchSidesMs = 3000;
+		let currentMovement = 0;
+		let performingRep = false;
+		let currentIteration = 0;
+		let defaultIterations = ["active"];
+		let wakeLock = null;
+		// state = (in_exercise_started, in_exercise_paused, null)
+		let state = null;
+		let DEBUG = false;
+		let LOCAL_WORKOUT = false;
+		function debug_log() {
+			if (DEBUG) {
+				console.log.apply(this, arguments);
+			}
+		}
+		init();
+
+		function init() {
+			if (LOCAL_WORKOUT) {
+				currentReps = 0;
+				setCurrentMovementText();
+				setCurrentMovementImage();
+				document.getElementById("authButtons").classList.add("hidden");
+				document.getElementById("authContent").classList.add("hidden");
+				document.getElementById("startButton").classList.remove("hidden");
+			} else {
+				getSession();
+			}
+			document.addEventListener("visibilitychange", (event) => {
+				if (document.visibilityState != "visible") {
+					pause();
+				}
+			});
+			const authKeypressCallback = function (event) {
+				if (event.key === "Enter") {
+					login();
+				}
+			}
+			document.getElementById("usernameInput").addEventListener("keydown", authKeypressCallback);
+			document.getElementById("passwordInput").addEventListener("keydown", authKeypressCallback);
+		}
+
+		function getSession() {
+			fetch(location.pathname + "session")
+				.then((response) => {
+					if (!response.ok) {
+						throw new Error(`HTTP error ${response.status}`);
+					}
+					return response.text(); // Or `.json()` or one of the others
+				})
+				.then((data) => {
+					res = JSON.parse(data);
+					document.getElementById("authButtons").classList.add("hidden");
+					document.getElementById("authContent").classList.add("hidden");
+					nowStr = new Date().toLocaleDateString();
+					if (res.workoutDay != nowStr) {
+						debug_log("Session's workout was for a prior day, fetching a new one");
+						fetchWorkout();
+						return
+					}
+					if (res.doneForTheDay) {
+						document.getElementById("currentMovement").innerText = "Done for the day!";
+						return
+					}
+					workout = res.workout.movements;
+					currentMovement = res.workout.done;
+					currentReps = 0;
+					setCurrentMovementText();
+					setCurrentMovementImage();
+					document.getElementById("startButton").classList.remove("hidden");
+				}).catch(() => { });
+		}
+
+		function fetchWorkout() {
+			nowStr = new Date().toLocaleDateString();
+			fetch(location.pathname + "workout", {method: "POST", body: JSON.stringify(nowStr)})
+				.then((response) => {
+					if (!response.ok) {
+						throw new Error(`HTTP error ${response.status}`);
+					}
+					return response.text(); // Or `.json()` or one of the others
+				})
+				.then((data) => {
+					res = JSON.parse(data);
+					workout = res.movements;
+					currentMovement = res.done;
+				}).catch(() => { }).finally(() => {
+					currentReps = 0;
+					setCurrentMovementText();
+					setCurrentMovementImage();
+					document.getElementById("startButton").classList.remove("hidden");
+				});
+		}
+
+		function sendServerWorkoutUpdate() {
+			fetch(location.pathname + "workoutUpdate", {method: "POST"})
+				.then((response) => {
+					if (!response.ok) {
+						throw new Error(`HTTP error ${response.status}`);
+					}
+					return response.text(); // Or `.json()` or one of the others
+				}).catch(() => { });
+		}
+
+		function setCurrentMovementImage() {
+			document.getElementById("movementImage").classList.remove("hidden");
+			var imageToDisplay = "rest";
+			if (performingRep) {
+				imageToDisplay = getIteration();
+			}
+			document.getElementById("movementImage").src = "movement_images/" + workout[currentMovement].name + "/" + imageToDisplay + ".png";
+		}
+
+		function setCurrentMovementText() {
+			document.getElementById("currentMovement").classList.remove("hidden");
+			document.getElementById("currentMovement").innerText =
+				"Movement: " + workout[currentMovement].name + " (" + (currentMovement + 1) + " / " + workout.length + ")";
+		}
+
+		function setRepsText() {
+			document.getElementById("currentMovement").classList.remove("hidden");
+			document.getElementById("movement").classList.remove("hidden");
+			document.getElementById("reps").classList.remove("hidden");
+			document.getElementById("time").classList.remove("hidden");
+			document.getElementById("pauseButton").classList.remove("hidden");
+			document.getElementById("reps").innerText = "Reps: " + (currentReps + 1) + " / " + workout[currentMovement].reps;
+		}
+
+		function setTimeText(time) {
+			document.getElementById("time").classList.remove("hidden");
+			document.getElementById("time").innerText = time;
+		}
+
+		function start() {
+			timer = new Timer();
+			document.getElementById("startButton").classList.add("hidden");
+			document.getElementById("pauseButton").classList.remove("hidden");
+			document.getElementById("authButtons").classList.add("hidden");
+			document.getElementById("authContent").classList.add("hidden");
+			startRep(workout[currentMovement]);
+			state = "in_exercise_started";
+		}
+
+		function pause() {
+			if (state != "in_exercise_started") {
+				debug_log("Can't pause, not started");
+				return;
+			}
+			timer.stop()
+			releaseWakeLock();
+			document.getElementById("pauseButton").classList.add("hidden");
+			document.getElementById("resumeButton").classList.remove("hidden");
+			state = "in_exercise_paused";
+		}
+
+		function resume() {
+			if (state != "in_exercise_paused") {
+				debug_log("Can't resume, not paused");
+				return;
+			}
+			timer.start()
+			requestWakeLock();
+			document.getElementById("resumeButton").classList.add("hidden");
+			document.getElementById("pauseButton").classList.remove("hidden");
+			state = "in_exercise_started";
+		}
+
+		function register() {
+			creds = {
+				username: document.getElementById("usernameInput").value,
+				password: document.getElementById("passwordInput").value
+			};
+			fetch(location.pathname + "register", {
+				method: "POST",
+				body: JSON.stringify(creds),
+			})
+				.then((response) => {
+					if (!response.ok) {
+						throw new Error(`HTTP error ${response.status}`);
+					}
+					return response.text(); // Or `.json()` or one of the others
+				})
+				.then((data) => {
+					document.getElementById("authButtons").classList.add("hidden");
+					document.getElementById("authContent").classList.add("hidden");
+					fetchWorkout();
+				}).catch(() => { });
+		}
+
+		function login() {
+			creds = {
+				username: document.getElementById("usernameInput").value,
+				password: document.getElementById("passwordInput").value
+			};
+			fetch(location.pathname + "session", {
+				method: "POST",
+				body: JSON.stringify(creds),
+			})
+				.then((response) => {
+					if (!response.ok) {
+						throw new Error(`HTTP error ${response.status}`);
+					}
+					return response.text(); // Or `.json()` or one of the others
+				})
+				.then((data) => {
+					document.getElementById("authButtons").classList.add("hidden");
+					document.getElementById("authContent").classList.add("hidden");
+					fetchWorkout();
+				}).catch(() => { });
+		}
+
+		async function requestWakeLock() {
+			try {
+				wakeLock = await navigator.wakeLock.request("screen");
+				wakeLock.addEventListener("release", () => {
+					debug_log("Wake Lock was released");
+				});
+				debug_log("Wake Lock is active");
+			} catch (err) {
+				console.error(`${err.name}, ${err.message}`);
+			}
+		}
+
+		async function releaseWakeLock() {
+			if (!wakeLock) {
+				return;
+			}
+			try {
+				await wakeLock.release();
+				wakeLock = null;
+			} catch (err) {
+				console.error(`${err.name}, ${err.message}`);
+			}
+		}
+
+		function updateProgressRing(percent) {
+			const timerElement = document.getElementById("time");
+			const circle = document.getElementById("progress-ring");
+			const radius = circle.r.baseVal.value;
+			const circumference = 2 * Math.PI * radius;
+			circle.style.strokeDasharray = `${circumference} ${circumference}`;
+			circle.style.strokeDashoffset = circumference;
+
+			document.getElementById("progress-ring").classList.remove("hidden");
+			const offset = circumference - percent / 100 * circumference;
+			circle.style.strokeDashoffset = offset;
+		}
+
+		function resetProgressRing() {
+			const timerElement = document.getElementById("time");
+			const circle = document.getElementById("progress-ring");
+			const radius = circle.r.baseVal.value;
+			const circumference = 2 * Math.PI * radius;
+			circle.style.strokeDasharray = `${circumference} ${circumference}`;
+			circle.style.strokeDashoffset = circumference;
+
+			document.getElementById("progress-ring").classList.add("hidden");
+			circle.style.strokeDashoffset = circumference;
+		}
+
+		function hasNextIteration() {
+			var iterations = defaultIterations;
+			if (workout[currentMovement].iterationNames) {
+				iterations = workout[currentMovement].iterationNames;
+			}
+			return currentIteration + 1 < iterations.length;
+		}
+
+		function nextIteration() {
+			var iterations = defaultIterations;
+			if (workout[currentMovement].iterationNames) {
+				iterations = workout[currentMovement].iterationNames;
+			}
+			if (++currentIteration >= iterations.length) {
+				currentIteration = 0;
+			}
+		}
+
+		function getIteration() {
+			var iterations = defaultIterations;
+			if (workout[currentMovement].iterationNames) {
+				iterations = workout[currentMovement].iterationNames;
+			}
+			return iterations[currentIteration];
+		}
+
+		function startRep(movement) {
+			timer.start();
+			state = "in_exercise_started";
+			setRepsText();
+			requestWakeLock();
+			document.getElementById("startSound").play();
+			performingRep = true;
+			setCurrentMovementImage();
+			timerId = setInterval(() => {
+				const timerTime = timer.getTime();
+				if (timerTime < msBeforeIterations) {
+					return;
+				}
+				// Each movement is, for each iteration (default is just active)
+				// 1. msBeforeIterations in rest (start sound and image change)
+				// 2. movement.Duration in iteration(stop sound and image change)
+				// 3. msBetweenIteration in rest
+				const totalIterationMovementMs = movement.duration / 1000 / 1000;
+				const totalIterationMs = totalIterationMovementMs + msBeforeIterations + msBetweenIterations;
+				const movementMs = timerTime - msBeforeIterations;
+				const newSecondsRemaining = Math.ceil((totalIterationMovementMs - movementMs) / 1000);
+				if (newSecondsRemaining != movementSecondsRemaining && newSecondsRemaining >= 0) {
+					movementSecondsRemaining = newSecondsRemaining;
+					setTimeText(Math.min(movement.duration / 1000 / 1000, movementSecondsRemaining));
+					if (movementSecondsRemaining > 0) {
+						document.getElementById("timeTickSound").play();
+					} else if (movementSecondsRemaining == 0) {
+						document.getElementById("stopSound").play();
+						performingRep = false;
+						setCurrentMovementImage();
+					}
+				}
+				if (timerTime >= totalIterationMs) {
+					resetProgressRing();
+					if (hasNextIteration()) {
+						nextIteration();
+						setCurrentMovementImage();
+					} else {
+						currentIteration = 0;
+						currentReps++;
+						releaseWakeLock();
+					}
+					clearInterval(timerId);
+					if (workout[currentMovement].switchSides && currentReps == workout[currentMovement].reps / 2) {
+						switchSides(movement);
+					} else if (currentReps < workout[currentMovement].reps) {
+						timer.stop();
+						timer.reset();
+						startRep(movement);
+					} else {
+						nextMovement();
+					}
+				} else {
+					const percentDone = Math.min(100, 100 * movementMs / totalIterationMovementMs);
+					updateProgressRing(percentDone);
+				}
+			}, 10)
+		}
+
+		function switchSides(movement) {
+			state = null;
+			timer.stop();
+			timer.reset();
+			timer.start();
+			setStatus("Switch sides");
+			timerId = setInterval(() => {
+				const timerTime = timer.getTime();
+				const timeRemaining = Math.ceil((switchSidesMs - timerTime) / 1000);
+				setTimeText(Math.min(switchSidesMs / 1000, timeRemaining));
+				if (timer.getTime() >= switchSidesMs) {
+					clearStatus();
+					clearInterval(timerId);
+					timer.stop();
+					timer.reset();
+					startRep(movement);
+				}
+			}, 10);
+		}
+
+		function nextMovement() {
+			sendServerWorkoutUpdate();
+			currentReps = 0;
+			currentMovement++;
+			state = null;
+			document.getElementById("pauseButton").classList.add("hidden");
+			document.getElementById("time").classList.add("hidden");
+			document.getElementById("reps").classList.add("hidden");
+			if (currentMovement < workout.length) {
+				document.getElementById("startButton").classList.remove("hidden");
+				setCurrentMovementText();
+				setCurrentMovementImage();
+			} else {
+				setStatus("Done for the day!");
+				document.getElementById("successSound").play();
+			}
+		}
+
+		function setStatus(status) {
+			document.getElementById("pauseButton").classList.add("hidden");
+			document.getElementById("currentMovement").classList.add("hidden");
+			document.getElementById("movement").classList.add("hidden");
+			document.getElementById("reps").classList.add("hidden");
+			document.getElementById("time").classList.add("hidden");
+			document.getElementById("status").classList.remove("hidden");
+			document.getElementById("status").innerText = status;
+		}
+
+		function clearStatus() {
+			document.getElementById("status").classList.add("hidden");
+			document.getElementById("status").innerText = "";
+		}
+
+
+		class Timer {
+			constructor() {
+				this.isRunning = false;
+				this.startTime = 0;
+				this.overallTime = 0;
+			}
+
+			_getTimeElapsedSinceLastStart() {
+				if (!this.startTime) {
+					return 0;
+				}
+				return Date.now() - this.startTime;
+			}
+
+			start() {
+				if (this.isRunning) {
+					return console.error("Timer is already running");
+				}
+				this.isRunning = true;
+				this.startTime = Date.now();
+			}
+
+			stop() {
+				if (!this.isRunning) {
+					return console.error("Timer is already stopped");
+				}
+				this.isRunning = false;
+				this.overallTime = this.overallTime + this._getTimeElapsedSinceLastStart();
+			}
+
+			reset() {
+				this.overallTime = 0;
+				if (this.isRunning) {
+					this.startTime = Date.now();
+					return;
+				}
+				this.startTime = 0;
+			}
+
+			getTime() {
+				if (!this.startTime) {
+					return 0;
+				}
+				if (this.isRunning) {
+					return this.overallTime + this._getTimeElapsedSinceLastStart();
+				}
+				return this.overallTime;
+			}
+		}
+	</script>
+
+</body>
+
+</html>
